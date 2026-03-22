@@ -1,0 +1,15 @@
+# Lab 3：CrashLoopBackOff 體驗
+# 這個 Pod 啟動後馬上 exit 1（失敗退出）
+# K8s 會重啟它 → 又失敗 → 進入 CrashLoopBackOff
+# 觀察：kubectl get pods --watch 看重啟間隔越來越長
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crash-pod
+  labels:
+    app: crash
+spec:
+  containers:
+    - name: crash
+      image: busybox:1.36
+      command: ["sh", "-c", "echo hello && exit 1"]

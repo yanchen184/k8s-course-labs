@@ -1,0 +1,15 @@
+# Lab 2：故意搞壞的 Pod（練習排錯）
+# image 名字拼錯了！你能找出問題並修好它嗎？
+# 提示：kubectl describe pod broken-pod → 看 Events
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-pod
+  labels:
+    app: broken
+spec:
+  containers:
+    - name: nginx
+      image: ngin:latest
+      ports:
+        - containerPort: 80

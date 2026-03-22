@@ -1,0 +1,14 @@
+# Lab 1：第一個 Pod
+# 部署一個 nginx，用 port-forward 在瀏覽器看到頁面
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-nginx
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.27
+      ports:
+        - containerPort: 80

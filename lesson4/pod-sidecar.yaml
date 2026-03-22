@@ -1,0 +1,31 @@
+# Lab 4：Sidecar 多容器 Pod
+# nginx 寫日誌 → busybox 即時讀取日誌
+# 兩個容器透過共享 Volume 傳資料
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-pod
+  labels:
+    app: sidecar-demo
+spec:
+  containers:
+    # 主容器：nginx
+    - name: nginx
+      image: nginx:1.27
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+
+    # Sidecar 容器：busybox 讀取 nginx 日誌
+    - name: log-reader
+      image: busybox:1.36
+      command: ["sh", "-c", "while [ ! -f /var/log/nginx/access.log ]; do sleep 1; done; tail -f /var/log/nginx/access.log"]
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+
+  volumes:
+    - name: shared-logs
+      emptyDir: {}
