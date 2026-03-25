@@ -16,9 +16,11 @@ kubectl get nodes
 | 2 | `pod-broken.yaml` | 4-13 | 排錯：image 拼錯 → ImagePullBackOff |
 | 3 | `pod-crash.yaml` | 4-13 | 排錯：CrashLoopBackOff 退避策略 |
 | 4 | `pod-sidecar.yaml` | 4-16 | Sidecar：nginx + busybox 共享 Volume |
-| 5 | `pod-httpd.yaml` | 4-10 | 自由練習：換 httpd image |
-| 6 | `pod-mysql-broken.yaml` / `pod-mysql.yaml` | 4-22 | 環境變數：MySQL 沒設密碼會 crash |
+| 5 | （學員自己寫）→ 對答案看 `answers/pod-httpd.yaml` | 4-10 | 自由練習：複製 pod.yaml 改成 httpd |
+| 6 | `pod-mysql-broken.yaml` → 對答案看 `answers/pod-mysql.yaml` | 4-22 | 環境變數：MySQL 沒設密碼會 crash |
 | 7 | `deployment.yaml` | 4-24 | Deployment 初體驗：刪 Pod 自動補回來 |
+
+> **answers/ 資料夾**：放正確答案，做完自己對照。先自己動手寫，不要直接看答案！
 
 ---
 
