@@ -1,0 +1,38 @@
+# Lab 4: Sidecar multi-container Pod
+# httpd writes logs and busybox tails them in real time
+# Both containers exchange data through a shared volume
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-pod
+  labels:
+    app: sidecar-demo
+spec:
+  containers:
+    # Main container: httpd writes logs to the shared volume
+    - name: httpd
+      image: httpd:2.4
+      command:
+        - sh
+        - -c
+        - |
+          sed -i 's#ErrorLog /proc/self/fd/2#ErrorLog "logs/error_log"#' /usr/local/apache2/conf/httpd.conf
+          sed -i 's#CustomLog /proc/self/fd/1 common#CustomLog "logs/access_log" common#' /usr/local/apache2/conf/httpd.conf
+          httpd-foreground
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /usr/local/apache2/logs
+
+    # Sidecar container: busybox reads httpd access logs
+    - name: log-reader
+      image: busybox:1.36
+      command: ["sh", "-c", "while [ ! -f /usr/local/apache2/logs/access_log ]; do sleep 1; done; tail -f /usr/local/apache2/logs/access_log"]
+      volumeMounts:
+        - name: shared-logs
+          mountPath: /usr/local/apache2/logs
+
+  volumes:
+    - name: shared-logs
+      emptyDir: {}
