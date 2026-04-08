@@ -1,25 +1,21 @@
 # ============================================
-# 基本 Deployment — nginx 3 副本
-# 用途：Loop 2 Deployment 擴縮容實作
+# Lab 1 救火題：有兩個 Bug 的 Deployment
+# 用途：Loop 2 Lab 1 — 你被叫去救火
 # ============================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deploy
-  labels:
-    app: nginx
+  name: api-service
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: api
   template:
     metadata:
       labels:
-        app: nginx
+        app: backend
     spec:
       containers:
-        - name: nginx
+        - name: api
           image: nginx:1.25
-          ports:
-            - containerPort: 80

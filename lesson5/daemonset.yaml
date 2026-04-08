@@ -1,0 +1,20 @@
+# ============================================
+# DaemonSet — 每個 Node 各跑一個 Pod
+# 用途：Loop 7 DaemonSet 實作
+# ============================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16
