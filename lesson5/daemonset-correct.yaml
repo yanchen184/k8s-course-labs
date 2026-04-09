@@ -1,0 +1,17 @@
+# lesson5/daemonset-correct.yaml — Lab 7：正確的 DaemonSet 版本 log-collector
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16

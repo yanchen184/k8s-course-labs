@@ -1,0 +1,14 @@
+# lesson5/nodeport.yaml — 綜合實作：fullstack-demo namespace 的 NodePort Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+  namespace: fullstack-demo
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080

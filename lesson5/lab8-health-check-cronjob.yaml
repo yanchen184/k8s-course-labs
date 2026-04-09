@@ -1,0 +1,18 @@
+# lesson5/lab8-health-check-cronjob.yaml — Lab 8：CronJob 每分鐘 curl nginx-svc 做 health check
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-check
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: checker
+              image: busybox:1.36
+              command: ["sh", "-c",
+                "wget -qO- http://nginx-svc && echo Health check OK"]
+          restartPolicy: OnFailure

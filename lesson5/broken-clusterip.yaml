@@ -1,0 +1,12 @@
+# lesson5/broken-clusterip.yaml — selector 故意打錯的 ClusterIP Service（排錯練習）
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: my-nginx          # BUG：應該是 app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
