@@ -1,0 +1,22 @@
+# ============================================
+# DaemonSet 陷阱題 — 故意保留 replicas 欄位
+# 用途：常見坑 Q2 — apply 會報錯，因為 DaemonSet 不支援 replicas
+# 教學重點：DaemonSet 的 Pod 數量由 Node 數量決定，不是 replicas
+# ============================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector-test
+spec:
+  replicas: 3          # ← DaemonSet 不支援此欄位，apply 會報錯
+  selector:
+    matchLabels:
+      app: log-collector-test
+  template:
+    metadata:
+      labels:
+        app: log-collector-test
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16
