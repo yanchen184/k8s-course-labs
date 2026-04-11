@@ -1,0 +1,42 @@
+# 6-9 Step 4：MySQL Deployment + ClusterIP Service
+# 用途：整合示範用 MySQL，從 Secret 讀密碼、從 ConfigMap 讀 DB 名稱
+# 注意：這個版本沒有掛 PVC，Pod 重啟資料會消失（故意的，下午再加持久化）
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deploy
+  namespace: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - secretRef:
+                name: mysql-secret      # MYSQL_ROOT_PASSWORD 從 Secret 注入
+            - configMapRef:
+                name: mysql-config      # MYSQL_DATABASE 從 ConfigMap 注入
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+  namespace: my-app
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
+  type: ClusterIP

@@ -1,0 +1,45 @@
+# 6-9 Step 5：Nginx 前端 Deployment + ClusterIP Service
+# 用途：整合示範用前端，把 ConfigMap 的 index.html 掛載為首頁
+# 關鍵：用 subPath 只掛單一檔案，不覆蓋整個目錄
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deploy
+  namespace: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: frontend-html
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html        # 只掛這一個 key，不影響目錄其他檔案
+      volumes:
+        - name: frontend-html
+          configMap:
+            name: frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: my-app
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

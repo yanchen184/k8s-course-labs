@@ -1,0 +1,35 @@
+# 6-9 Step 7：整合示範 Ingress
+# 用途：把前端和 API 統一在一個入口，用路徑路由
+#   myapp.local/     → frontend-svc
+#   myapp.local/api  → api-svc
+#
+# 前置條件：
+#   1. Namespace my-app 已建立
+#   2. frontend-svc 和 api-svc 都已建立
+#   3. /etc/hosts 加上 "<NODE-IP> myapp.local"
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: my-app
+spec:
+  ingressClassName: traefik          # k3s 內建 Traefik；minikube 改成 nginx
+  rules:
+    - host: myapp.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-svc
+                port:
+                  number: 80
