@@ -1,4 +1,4 @@
-# 5-12 ClusterIP Service 實作
+# 5-12 排錯練習：selector 故意打錯的 ClusterIP Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,8 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: nginx
+    app: my-nginx          # BUG：應該是 app: nginx
   ports:
     - port: 80
       targetPort: 80
-      protocol: TCP

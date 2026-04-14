@@ -1,0 +1,32 @@
+# 5-13 Lab 5：兩個 Bug（type 設錯 + targetPort 不一致）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        ports:
+        - containerPort: 80     # nginx 預設監聽 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+spec:
+  type: ClusterIP         # BUG 1：要讓外面連到，應該是 NodePort
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080      # BUG 2：nginx 實際監聽 80，這裡寫 8080 沒人接

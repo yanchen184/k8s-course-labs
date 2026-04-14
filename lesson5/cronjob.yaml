@@ -1,0 +1,20 @@
+# 5-15 CronJob 實作：每分鐘執行一次
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello-cron
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: hello
+              image: busybox:1.36
+              command: ["sh", "-c", "date; echo Hello from CronJob"]
+          restartPolicy: OnFailure

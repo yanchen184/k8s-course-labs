@@ -1,10 +1,20 @@
-# Lab 6-1/6-3: 基本 Ingress（Path-based Routing）
+# Lab 6-1: 基本 Ingress（Path-based Routing）
 # 功能：根據 URL 路徑，將流量導向不同的 Service
 #   /frontend  → frontend-svc
 #   /api       → api-svc
-#   /config    → frontend-svc（展示 Volume 掛載行為）
 #
-# 前置條件：k3s 內建 Traefik Ingress Controller
+# 前置條件：
+#   1. 已安裝 Ingress Controller（k3s 內建 Traefik）
+#   2. kubectl get pods -n kube-system | grep traefik  → Running
+#
+# Docker 對照：這就像 Nginx 反向代理的 location block
+#   location /frontend { proxy_pass http://frontend:80; }
+#   location /api      { proxy_pass http://api:80; }
+#
+# 驗證：
+#   curl http://<NODE-IP>/frontend → 印出 Server IP + Message: Hello from frontend
+#   curl http://<NODE-IP>/api      → 印出 Server IP + Message: Hello from api
+#   兩個 Server IP 不同 → 確認是不同 Pod 在服務
 
 ---
 apiVersion: apps/v1
@@ -14,7 +24,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: frontend
@@ -27,6 +37,13 @@ spec:
         - name: app
           image: yanchen184/k8s-demo-app:latest
           imagePullPolicy: IfNotPresent
+          env:
+            - name: MESSAGE
+              value: "Hello from frontend"
+            - name: USERNAME
+              value: "guest"
+            - name: PASSWORD
+              value: "（未設定）"
           ports:
             - containerPort: 80
 
@@ -51,7 +68,7 @@ metadata:
   labels:
     app: api
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: api
@@ -66,7 +83,11 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: MESSAGE
-              value: "Hello from API"
+              value: "Hello from api"
+            - name: USERNAME
+              value: "guest"
+            - name: PASSWORD
+              value: "（未設定）"
           ports:
             - containerPort: 80
 
@@ -89,7 +110,7 @@ kind: Ingress
 metadata:
   name: app-ingress
 spec:
-  ingressClassName: traefik
+  ingressClassName: traefik    # k3s 用 traefik；nginx-ingress 改成 nginx
   rules:
     - http:
         paths:

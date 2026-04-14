@@ -1,0 +1,18 @@
+# 5-15 常見坑：DaemonSet 加 replicas 會報錯
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector-test
+spec:
+  replicas: 3          # ← DaemonSet 不支援此欄位，apply 會報錯
+  selector:
+    matchLabels:
+      app: log-collector-test
+  template:
+    metadata:
+      labels:
+        app: log-collector-test
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16

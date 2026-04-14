@@ -1,13 +1,12 @@
-# 5-12 ClusterIP Service 實作
+# 5-12 學員實作：httpd ClusterIP Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-svc
+  name: httpd-svc
 spec:
   type: ClusterIP
   selector:
-    app: nginx
+    app: httpd
   ports:
     - port: 80
       targetPort: 80
-      protocol: TCP

@@ -1,14 +1,13 @@
-# 5-13 NodePort Service 實作
+# 5-13 LoadBalancer Service（觀察 EXTERNAL-IP pending）
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-nodeport
+  name: nginx-loadbalancer
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: nginx
   ports:
     - port: 80
       targetPort: 80
-      nodePort: 30080
       protocol: TCP

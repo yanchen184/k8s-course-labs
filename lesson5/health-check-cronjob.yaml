@@ -1,0 +1,18 @@
+# 5-17 Lab 8：CronJob 每分鐘 health check nginx-svc
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-check
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: checker
+              image: busybox:1.36
+              command: ["sh", "-c",
+                "wget -qO- http://nginx-svc && echo Health check OK"]
+          restartPolicy: OnFailure

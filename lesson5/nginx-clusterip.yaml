@@ -1,4 +1,4 @@
-# 5-12 ClusterIP Service 實作
+# 5-17 Lab 8：ClusterIP Service for nginx-web
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,8 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: nginx
+    app: nginx-web
   ports:
     - port: 80
       targetPort: 80
-      protocol: TCP

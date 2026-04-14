@@ -1,9 +1,4 @@
-# ============================================
-# Namespace 練習
-# 用途：建立 dev 和 staging 兩個命名空間
-# 對照 Docker：Docker 沒有直接對應，類似不同的 compose 專案
-# ============================================
----
+# 5-14 Namespace 練習（dev + staging）
 apiVersion: v1
 kind: Namespace
 metadata:

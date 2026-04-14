@@ -1,0 +1,18 @@
+# 5-15 Lab 7：Jimmy 用 Deployment 部署 log-collector（應改成 DaemonSet）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16

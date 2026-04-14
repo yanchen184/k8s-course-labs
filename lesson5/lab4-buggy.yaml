@@ -1,0 +1,42 @@
+# 5-12 Lab 4：Service selector 和 Pod label 不一致（找 Bug 並修復）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api          # Pod 的 label 是 app: api
+    spec:
+      containers:
+      - name: api
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: api-server     # BUG：和 Pod label 不一致！應該是 app: api
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+  containers:
+  - name: client
+    image: curlimages/curl
+    command: ["sleep", "3600"]

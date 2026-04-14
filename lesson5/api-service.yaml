@@ -1,0 +1,18 @@
+# 5-4 Lab 1：你被叫去救火（兩個 bug，自己找）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.25
