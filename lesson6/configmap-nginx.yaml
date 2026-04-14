@@ -1,4 +1,4 @@
-# Lab 6-4: ConfigMap 掛載為檔案（Nginx 設定檔）
+# Lab 6-2: ConfigMap 掛載為檔案（Nginx 設定檔）
 # 功能：用 ConfigMap 存放 Nginx 設定檔，掛載到 Pod 的檔案系統
 #
 # Docker 對照：
@@ -9,6 +9,9 @@
 # 重點：Volume 掛載的 ConfigMap 支援「熱更新」
 #   修改 ConfigMap 後，Pod 裡的檔案會自動更新（約 30-60 秒）
 #   ⚠️ 但如果用 subPath 掛載，就不會自動更新！這是常見的坑
+#
+# 驗證：
+#   curl http://<NODE-IP>:30090/healthz  → OK
 
 ---
 # --- ConfigMap：存放 Nginx 設定檔的內容 ---
@@ -23,19 +26,6 @@ data:
     server {
         listen 80;
         server_name localhost;
-
-        # 首頁
-        location / {
-            root /usr/share/nginx/html;
-            index index.html;
-        }
-
-        # 反向代理到 API（示範用）
-        location /api/ {
-            proxy_pass http://api-svc:3000/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
 
         # 健康檢查端點
         location /healthz {
@@ -52,7 +42,7 @@ kind: Deployment
 metadata:
   name: nginx-custom
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: nginx-custom
@@ -92,4 +82,5 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-  type: ClusterIP
+      nodePort: 30090
+  type: NodePort
