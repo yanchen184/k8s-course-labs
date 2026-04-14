@@ -1,0 +1,39 @@
+# 6-4 學員實作用
+# 學員任務：在 ingress-basic.yaml 加 /shop 路由，讓這個服務可以被外部存取
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shop
+  template:
+    metadata:
+      labels:
+        app: shop
+    spec:
+      containers:
+      - name: shop
+        image: yanchen184/k8s-demo-app:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MESSAGE
+          value: "Hello from shop"
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shop-svc
+spec:
+  selector:
+    app: shop
+  ports:
+  - port: 8080
+    targetPort: 80
