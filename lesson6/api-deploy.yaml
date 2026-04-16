@@ -1,5 +1,5 @@
-# 6-9 Step 6：httpd API Deployment + ClusterIP Service
-# 用途：整合示範用 API，簡單的 httpd 作為 /api 後端
+# 6-9 Step 6：Demo App API Deployment + ClusterIP Service
+# 用途：整合示範用 API，curl /api 顯示 Message: Hello from api
 
 apiVersion: apps/v1
 kind: Deployment
@@ -17,8 +17,12 @@ spec:
         app: api
     spec:
       containers:
-        - name: httpd
-          image: httpd:2.4
+        - name: app
+          image: yanchen184/k8s-demo-app:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MESSAGE
+              value: "Hello from api"
           ports:
             - containerPort: 80
 ---

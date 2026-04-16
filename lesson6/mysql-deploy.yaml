@@ -1,6 +1,12 @@
 # 6-9 Step 4：MySQL Deployment + ClusterIP Service
-# 用途：整合示範用 MySQL，從 Secret 讀密碼、從 ConfigMap 讀 DB 名稱
+# 用途：整合示範用 MySQL，從 Secret 讀密碼
 # 注意：這個版本沒有掛 PVC，Pod 重啟資料會消失（故意的，下午再加持久化）
+#
+# ⚠ 為何用 env.valueFrom 而不是 envFrom：
+#   手稿 Step 2 建 Secret 的 key 是 "root-password"
+#   但 MySQL image 需要的環境變數是 "MYSQL_ROOT_PASSWORD"
+#   envFrom 會直接用 key 名稱當環境變數名，兩者不符合
+#   所以用 valueFrom.secretKeyRef 做 key → 環境變數名稱的對應
 
 apiVersion: apps/v1
 kind: Deployment
@@ -22,11 +28,14 @@ spec:
           image: mysql:8.0
           ports:
             - containerPort: 3306
-          envFrom:
-            - secretRef:
-                name: mysql-secret      # MYSQL_ROOT_PASSWORD 從 Secret 注入
-            - configMapRef:
-                name: mysql-config      # MYSQL_DATABASE 從 ConfigMap 注入
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: root-password   # Secret key "root-password" → env "MYSQL_ROOT_PASSWORD"
+            - name: MYSQL_DATABASE
+              value: "mydb"            # 直接寫死，簡化流程
 ---
 apiVersion: v1
 kind: Service

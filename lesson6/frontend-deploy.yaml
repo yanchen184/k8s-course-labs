@@ -1,6 +1,6 @@
-# 6-9 Step 5：Nginx 前端 Deployment + ClusterIP Service
-# 用途：整合示範用前端，把 ConfigMap 的 index.html 掛載為首頁
-# 關鍵：用 subPath 只掛單一檔案，不覆蓋整個目錄
+# 6-9 Step 5：Demo App 前端 Deployment + ClusterIP Service
+# 用途：整合示範用前端，從 ConfigMap 注入 MESSAGE/USERNAME 環境變數
+# 注意：使用 k8s-demo-app，curl /frontend 顯示 Message / Username
 
 apiVersion: apps/v1
 kind: Deployment
@@ -18,18 +18,14 @@ spec:
         app: frontend
     spec:
       containers:
-        - name: nginx
-          image: nginx:1.25
+        - name: app
+          image: yanchen184/k8s-demo-app:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: app-config    # MESSAGE, USERNAME 從 ConfigMap 注入
           ports:
             - containerPort: 80
-          volumeMounts:
-            - name: frontend-html
-              mountPath: /usr/share/nginx/html/index.html
-              subPath: index.html        # 只掛這一個 key，不影響目錄其他檔案
-      volumes:
-        - name: frontend-html
-          configMap:
-            name: frontend-config
 ---
 apiVersion: v1
 kind: Service
