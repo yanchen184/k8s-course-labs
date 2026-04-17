@@ -4,21 +4,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-probe-demo
+  name: nginx-probe-demo
   labels:
-    app: api-probe-demo
+    app: nginx-probe
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: api-probe-demo
+      app: nginx-probe
   template:
     metadata:
       labels:
-        app: api-probe-demo
+        app: nginx-probe
     spec:
       containers:
-        - name: api
+        - name: nginx
           image: nginx:1.27
           ports:
             - containerPort: 80
@@ -28,13 +28,14 @@ spec:
               path: /
               port: 80
             initialDelaySeconds: 5      # 啟動後等 5 秒才開始檢查
-            periodSeconds: 10            # 每 10 秒檢查一次
-            failureThreshold: 3          # 連續失敗 3 次才判定不健康
+            periodSeconds: 10           # 每 10 秒檢查一次
+            failureThreshold: 3         # 連續失敗 3 次才判定不健康
+            timeoutSeconds: 1
           # readinessProbe：準備好了嗎？沒好就不轉流量
           readinessProbe:
             httpGet:
               path: /
               port: 80
-            initialDelaySeconds: 3       # 啟動後等 3 秒才開始檢查
-            periodSeconds: 5             # 每 5 秒檢查一次
-            failureThreshold: 2          # 連續失敗 2 次就從 Service 移除
+            initialDelaySeconds: 3      # 啟動後等 3 秒才開始檢查
+            periodSeconds: 5            # 每 5 秒檢查一次
+            failureThreshold: 2         # 連續失敗 2 次就從 Service 移除
