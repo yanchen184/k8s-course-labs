@@ -1,0 +1,6 @@
+apiVersion: v2
+name: url-shortener
+description: Short Link Lab — K8s course final practice product
+type: application
+version: 1.0.0
+appVersion: "v1"

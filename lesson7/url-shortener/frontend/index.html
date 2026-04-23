@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Short Link Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">SHORT</div>
+      <div>
+        <h1>Short Link Lab</h1>
+        <p>Kubernetes final practice product</p>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="panel">
+        <h2>Create a short link</h2>
+        <form id="link-form" class="form">
+          <label>
+            Long URL
+            <input id="url-input" name="url" type="url" placeholder="https://example.com/very/long/path" required />
+          </label>
+          <label>
+            Custom code
+            <input id="code-input" name="custom_code" type="text" placeholder="optional: launch2026" minlength="4" maxlength="32" />
+          </label>
+          <button type="submit">Create link</button>
+        </form>
+        <p id="message" class="message" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Recent links</h2>
+          <button id="refresh-button" type="button" class="secondary">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Short link</th>
+                <th>Destination</th>
+                <th>Clicks</th>
+              </tr>
+            </thead>
+            <tbody id="links-body">
+              <tr>
+                <td colspan="3" class="empty">Loading links...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

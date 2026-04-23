@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-frontend
+  namespace: url-shortener
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: url-frontend
+  template:
+    metadata:
+      labels:
+        app: url-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: yanchen184/url-shortener-frontend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: url-frontend-service
+  namespace: url-shortener
+spec:
+  selector:
+    app: url-frontend
+  ports:
+    - port: 80
+      targetPort: 80
