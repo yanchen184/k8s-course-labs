@@ -45,7 +45,7 @@ Ingress short.local
 
 ## Image Strategy
 
-The default class workflow avoids Docker Hub rate limits. The instructor provides a prebuilt image tar from cloud storage, and students import that tar into every k3s node.
+The default class workflow avoids Docker Hub rate limits. The instructor provides a prebuilt image tar from cloud storage, and users import that tar into every k3s node.
 
 ```text
 cloud download -> k3s ctr images import -> kubectl apply / helm install
@@ -73,15 +73,15 @@ Import the tar into every k3s node:
 
 ```bash
 IMAGE_TAR=~/Downloads/url-shortener-k3s-images.tar \
-K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
   ./scripts/load-images-to-k3s-ssh.sh
-K3S_NODES="student@192.168.56.10 student@192.168.56.11" ./scripts/check-k3s-images-ssh.sh
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" ./scripts/check-k3s-images-ssh.sh
 ```
 
 If you place the tar at the default path `./dist/url-shortener-k3s-images.tar`, `IMAGE_TAR` can be omitted:
 
 ```bash
-K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
   ./scripts/load-images-to-k3s-ssh.sh
 ```
 
@@ -100,7 +100,7 @@ If your SSH command needs extra options, use `SSH_OPTS`:
 
 ```bash
 SSH_OPTS="-i ~/.ssh/k8s-lab -o StrictHostKeyChecking=accept-new" \
-K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
   ./scripts/load-images-to-k3s-ssh.sh
 ```
 
@@ -218,7 +218,7 @@ Expected result: the StatefulSet recreates `postgres-0`, the same PVC is mounted
 
 ## Helm Install
 
-After students complete the manual flow, show the one-command install:
+After users complete the manual flow, show the one-command install:
 
 ```bash
 helm install url-shortener ./helm/url-shortener \

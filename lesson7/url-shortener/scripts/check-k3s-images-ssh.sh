@@ -10,7 +10,7 @@ IMAGES=(
 
 if [[ -z "${K3S_NODES:-}" ]]; then
   printf 'K3S_NODES is required. Example:\n' >&2
-  printf '  K3S_NODES="student@192.168.56.10 student@192.168.56.11" %s\n' "$0" >&2
+  printf '  K3S_NODES="user@192.168.56.10 user@192.168.56.11" %s\n' "$0" >&2
   exit 1
 fi
 
