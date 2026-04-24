@@ -45,25 +45,44 @@ Ingress short.local
 
 ## Image Strategy
 
-The default class workflow avoids Docker Hub rate limits. Students build the product images locally, save them into a tar file, and import that tar into every k3s node.
+The default class workflow avoids Docker Hub rate limits. The instructor provides a prebuilt image tar from cloud storage, and students import that tar into every k3s node.
 
 ```text
-source code -> docker build -> docker save -> k3s ctr images import -> kubectl apply / helm install
+cloud download -> k3s ctr images import -> kubectl apply / helm install
 ```
 
-Important: Docker and k3s do not necessarily use the same image store. `docker build` creates images in Docker, but k3s runs Pods from the containerd image store inside each Linux node. Import the images into both the control plane and worker nodes before applying YAML.
+Important: Docker and k3s do not necessarily use the same image store. Downloading the tar is not enough; k3s runs Pods from the containerd image store inside each Linux node. Import the tar into both the control plane and worker nodes before applying YAML.
 
 Rule of thumb: if a Pod is scheduled to a node, that node must already have the image. With `imagePullPolicy: Never`, k3s will not pull from Docker Hub as a backup.
 
-### Default: local images
+### Default: instructor-provided image tar
 
-Run from this directory:
+Download `url-shortener-k3s-images.tar` from the instructor's cloud storage link, then verify the checksum:
 
 ```bash
-./scripts/build-local-images.sh
-./scripts/save-k3s-images.sh
-K3S_NODES="student@192.168.56.10 student@192.168.56.11" ./scripts/load-images-to-k3s-ssh.sh
+sha256sum ~/Downloads/url-shortener-k3s-images.tar
+```
+
+Expected SHA256:
+
+```text
+bae34023b8fd055f13235ce239976c95d5f97156bde6bd0452c8de7a76f7fc44
+```
+
+Import the tar into every k3s node:
+
+```bash
+IMAGE_TAR=~/Downloads/url-shortener-k3s-images.tar \
+K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
 K3S_NODES="student@192.168.56.10 student@192.168.56.11" ./scripts/check-k3s-images-ssh.sh
+```
+
+If you place the tar at the default path `./dist/url-shortener-k3s-images.tar`, `IMAGE_TAR` can be omitted:
+
+```bash
+K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
 ```
 
 The tar file contains:
@@ -92,7 +111,18 @@ For instructor Multipass environments, use the Multipass helper scripts instead:
 ./scripts/check-k3s-images.sh
 ```
 
-If `save-k3s-images.sh` reports missing `postgres:15` or `busybox:1.36`, ask the instructor for a preloaded image tar or pull those images before class. Only building API/frontend is not enough because PostgreSQL and busybox are still runtime images.
+### Optional: rebuild the image tar
+
+Use this path only when the instructor needs to regenerate the tar before class:
+
+```bash
+./scripts/build-local-images.sh
+docker pull postgres:15
+docker pull busybox:1.36
+./scripts/save-k3s-images.sh
+```
+
+Only building API/frontend is not enough because PostgreSQL and busybox are still runtime images.
 
 ### Fallback: public images
 
