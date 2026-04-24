@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: tasks
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+      - name: wait-for-mysql
+        image: mysql:8.0
+        command: ['sh', '-c', 'until mysqladmin ping -h mysql-service -uroot -p"$MYSQL_ROOT_PASSWORD" --silent; do echo waiting for mysql; sleep 2; done']
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: mysql-password
+      containers:
+      - name: migrate
+        image: yanchen184/task-api:v2
+        command: ["node", "migrate.js"]
+        env:
+        - name: MYSQL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MYSQL_HOST
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: mysql-password
+  backoffLimit: 3

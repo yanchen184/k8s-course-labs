@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-runner
+  namespace: tasks
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: task-runner
+  template:
+    metadata:
+      labels:
+        app: task-runner
+    spec:
+      containers:
+      - name: task-runner
+        image: yanchen184/task-runner:v1
+        envFrom:
+        - configMapRef:
+            name: app-config
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: mysql-password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: redis-password
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
