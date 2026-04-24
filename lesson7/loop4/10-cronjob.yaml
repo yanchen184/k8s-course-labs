@@ -16,7 +16,7 @@ spec:
           containers:
           - name: scheduler
             image: yanchen184/task-scheduler:v1
-            command: ["node", "enqueue-due-tasks.js"]
+            command: ["node", "scheduler.js"]
             envFrom:
             - configMapRef:
                 name: app-config
