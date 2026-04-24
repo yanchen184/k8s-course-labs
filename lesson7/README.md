@@ -24,7 +24,8 @@ kubectl top nodes
 | 5 | `networkpolicy-db.yaml` | NetworkPolicy：DB 只允許 API 連 |
 | 6 | `daemonset.yaml` | DaemonSet：每個 Node 跑一個 Pod |
 | 7 | `cronjob.yaml` | Job + CronJob：一次性任務 + 排程任務 |
-| 8 | `final-exam/` | 總複習：12 步部署完整系統 |
+| 8 | `url-shortener/` | 最終產品實作：不寫程式碼，部署短網址服務 |
+| 9 | `final-exam/` | 舊版總複習：12 步部署完整系統 |
 
 ---
 
@@ -241,7 +242,26 @@ kubectl delete job one-time-job
 kubectl delete cronjob timestamp-printer
 ```
 
-## Lab 8：總複習 — 從零部署完整系統
+## Lab 8：最終產品實作 — 短網址服務
+
+詳見 [url-shortener/README.md](url-shortener/README.md)。
+
+建議課堂流程：
+
+| 時間 | 內容 |
+|---|---|
+| 0-10 min | 產品 demo + 架構說明 |
+| 10-25 min | Namespace、Secret、ConfigMap |
+| 25-45 min | PostgreSQL StatefulSet + PVC |
+| 45-60 min | Migration Job |
+| 60-80 min | API Deployment + Service |
+| 80-95 min | Frontend Deployment + Service |
+| 95-110 min | Ingress + HPA |
+| 110-120 min | 驗收 + Helm 一鍵部署與調參 |
+
+重點：學生不用寫程式碼，只部署一個已完成的產品，並理解每個 Kubernetes 元件在產品裡的責任。
+
+## Lab 9：舊版總複習 — 從零部署完整系統
 
 詳見 [final-exam/README.md](final-exam/README.md) 的 12 步部署指南。
 
@@ -252,6 +272,7 @@ kubectl delete cronjob timestamp-printer
 ```bash
 # 清理所有 Lab 資源
 kubectl delete namespace prod 2>/dev/null
+kubectl delete namespace url-shortener 2>/dev/null
 kubectl delete deployment api-probe-demo api-resources-demo oom-demo fake-db fake-api 2>/dev/null
 kubectl delete svc probe-svc fake-db-svc 2>/dev/null
 kubectl delete daemonset log-collector 2>/dev/null
@@ -294,5 +315,9 @@ kubectl get all
 - [ ] CronJob 每分鐘自動跑一次
 
 ### 總複習
+- [ ] 能部署短網址服務
+- [ ] 能建立短網址並驗證 redirect
+- [ ] 能說明 API / Frontend / PostgreSQL / PVC / Ingress / HPA 的責任
+- [ ] 能用 Helm 一個指令安裝，並知道 values 可以調整什麼
 - [ ] 從空 Namespace 完成 12 步部署
 - [ ] 所有元件跑起來並通過驗證

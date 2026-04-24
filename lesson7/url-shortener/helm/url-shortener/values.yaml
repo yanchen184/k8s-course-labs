@@ -1,0 +1,46 @@
+image:
+  registry: yanchen184
+  apiRepository: url-shortener-api
+  frontendRepository: url-shortener-frontend
+  tag: v1
+  pullPolicy: IfNotPresent
+
+replicaCount:
+  api: 2
+  frontend: 2
+
+secret:
+  postgresPassword: "replace-me-for-lab"
+
+postgres:
+  image: postgres:15
+  database: shortlinks
+  user: postgres
+  storageSize: 1Gi
+
+ingress:
+  enabled: true
+  className: traefik
+  host: short.local
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCpuUtilization: 70
+
+resources:
+  api:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+  frontend:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
