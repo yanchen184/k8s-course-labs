@@ -37,29 +37,61 @@ Ingress short.local
 |---|---|
 | `api/` | Express API source code, migration, and Dockerfile |
 | `frontend/` | Static frontend source code and Dockerfile |
-| `k8s/` | Step-by-step Kubernetes YAML for students |
+| `k8s/` | Public-image Kubernetes YAML fallback |
+| `k8s-local/` | Local-image YAML for API, frontend, and migration Job |
 | `helm/url-shortener/` | Helm chart for one-command install and upgrade |
+| `scripts/` | Student scripts for build/save/load/check local images |
 | `local-smoke-test.sh` | Instructor-only Docker smoke test for local verification |
 
-## Image Prerequisite
+## Image Strategy
 
-The Kubernetes YAML and Helm chart use these public image tags:
+The default class workflow avoids Docker Hub rate limits. Students build the product images locally, save them into a tar file, and import that tar into every k3s/Multipass node.
+
+```text
+source code -> docker build -> docker save -> k3s ctr images import -> kubectl apply / helm install
+```
+
+Important: Docker and k3s do not necessarily use the same image store. `docker build` creates images in Docker, but k3s runs Pods from the containerd image store inside the Multipass VM. Import the images before applying YAML.
+
+### Default: local images
+
+Run from this directory:
+
+```bash
+./scripts/build-local-images.sh
+./scripts/save-k3s-images.sh
+./scripts/load-images-to-k3s-multipass.sh
+./scripts/check-k3s-images.sh
+```
+
+The tar file contains:
+
+| Image | Used by |
+|---|---|
+| `url-shortener-api:lab` | API Deployment and migration Job |
+| `url-shortener-frontend:lab` | Frontend Deployment |
+| `postgres:15` | PostgreSQL StatefulSet |
+| `busybox:1.36` | migration Job init container |
+
+If your Multipass VM names do not contain `k3s`, provide them explicitly:
+
+```bash
+K3S_NODES="k3s-master k3s-worker1" ./scripts/load-images-to-k3s-multipass.sh
+K3S_NODES="k3s-master k3s-worker1" ./scripts/check-k3s-images.sh
+```
+
+If `save-k3s-images.sh` reports missing `postgres:15` or `busybox:1.36`, ask the instructor for a preloaded image tar or pull those images before class. Only building API/frontend is not enough because PostgreSQL and busybox are still runtime images.
+
+### Fallback: public images
+
+The public-image YAML and chart values can still use these tags:
 
 ```text
 yanchen184/url-shortener-api:v1
 yanchen184/url-shortener-frontend:v1
 ```
 
-Before class, verify that both images exist:
-
-```bash
-docker manifest inspect yanchen184/url-shortener-api:v1 >/dev/null
-docker manifest inspect yanchen184/url-shortener-frontend:v1 >/dev/null
-```
-
-If either image is missing, publish the course app images first. In the course site repo, the GitHub Actions workflow `.github/workflows/build-apps.yml` builds and pushes these images when the `apps/**` changes are pushed to `master`, assuming `DOCKERHUB_TOKEN` is configured.
-
-The local smoke test does not require these public tags because it builds temporary local images from `api/` and `frontend/`.
+Use this only as a fallback. If the whole class pulls public images at the same time, Docker Hub may rate-limit requests and Pods can enter `ImagePullBackOff`.
 
 ## Two-Hour Teaching Flow
 
@@ -83,9 +115,9 @@ kubectl apply -f k8s/00-namespace.yaml
 kubectl apply -f k8s/01-secret.yaml
 kubectl apply -f k8s/02-configmap.yaml
 kubectl apply -f k8s/03-postgres.yaml
-kubectl apply -f k8s/04-migrate-job.yaml
-kubectl apply -f k8s/05-api.yaml
-kubectl apply -f k8s/06-frontend.yaml
+kubectl apply -f k8s-local/04-migrate-job.yaml
+kubectl apply -f k8s-local/05-api.yaml
+kubectl apply -f k8s-local/06-frontend.yaml
 kubectl apply -f k8s/07-hpa.yaml
 kubectl apply -f k8s/08-ingress.yaml
 ```
@@ -149,7 +181,8 @@ After students complete the manual flow, show the one-command install:
 ```bash
 helm install url-shortener ./helm/url-shortener \
   -n url-shortener \
-  --create-namespace
+  --create-namespace \
+  -f ./helm/url-shortener/values-local.yaml
 ```
 
 Upgrade with values:
@@ -173,6 +206,7 @@ helm rollback url-shortener 1 -n url-shortener
 
 | Value | Meaning |
 |---|---|
+| `image.registry` | Empty for local images, public registry namespace for remote images |
 | `image.tag` | Product version to deploy |
 | `replicaCount.api` | API Pod count before HPA changes it |
 | `replicaCount.frontend` | Frontend Pod count |

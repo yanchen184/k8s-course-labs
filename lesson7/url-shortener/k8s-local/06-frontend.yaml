@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: url-frontend
-  namespace: {{ .Release.Namespace }}
+  namespace: url-shortener
 spec:
-  replicas: {{ .Values.replicaCount.frontend }}
+  replicas: 2
   selector:
     matchLabels:
       app: url-frontend
@@ -15,18 +15,23 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: {{ include "url-shortener.image" (dict "registry" .Values.image.registry "repository" .Values.image.frontendRepository "tag" .Values.image.tag) | quote }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: url-shortener-frontend:lab
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
           resources:
-            {{- toYaml .Values.resources.frontend | nindent 12 }}
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: url-frontend-service
-  namespace: {{ .Release.Namespace }}
+  namespace: url-shortener
 spec:
   selector:
     app: url-frontend

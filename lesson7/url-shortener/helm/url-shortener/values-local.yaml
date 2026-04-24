@@ -1,0 +1,9 @@
+image:
+  registry: ""
+  apiRepository: url-shortener-api
+  frontendRepository: url-shortener-frontend
+  tag: lab
+  pullPolicy: Never
+
+postgres:
+  image: postgres:15
