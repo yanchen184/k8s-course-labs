@@ -45,13 +45,13 @@ Ingress short.local
 
 ## Image Strategy
 
-The default class workflow avoids Docker Hub rate limits. Students build the product images locally, save them into a tar file, and import that tar into every k3s/Multipass node.
+The default class workflow avoids Docker Hub rate limits. Students build the product images locally, save them into a tar file, and import that tar into every k3s node.
 
 ```text
 source code -> docker build -> docker save -> k3s ctr images import -> kubectl apply / helm install
 ```
 
-Important: Docker and k3s do not necessarily use the same image store. `docker build` creates images in Docker, but k3s runs Pods from the containerd image store inside the Multipass VM. Import the images before applying YAML.
+Important: Docker and k3s do not necessarily use the same image store. `docker build` creates images in Docker, but k3s runs Pods from the containerd image store inside each Linux node. Import the images into both the control plane and worker nodes before applying YAML.
 
 ### Default: local images
 
@@ -60,8 +60,8 @@ Run from this directory:
 ```bash
 ./scripts/build-local-images.sh
 ./scripts/save-k3s-images.sh
-./scripts/load-images-to-k3s-multipass.sh
-./scripts/check-k3s-images.sh
+K3S_NODES="student@192.168.56.10 student@192.168.56.11" ./scripts/load-images-to-k3s-ssh.sh
+K3S_NODES="student@192.168.56.10 student@192.168.56.11" ./scripts/check-k3s-images-ssh.sh
 ```
 
 The tar file contains:
@@ -73,11 +73,21 @@ The tar file contains:
 | `postgres:15` | PostgreSQL StatefulSet |
 | `busybox:1.36` | migration Job init container |
 
-If your Multipass VM names do not contain `k3s`, provide them explicitly:
+Set `K3S_NODES` to the SSH targets for every k3s node. For a Windows + VMware classroom, this usually means the Linux control plane VM and the Linux worker VM. The machine running the script must be able to SSH into each VM, and the SSH user must be able to run `sudo -n k3s ctr images list -q` without an interactive password prompt.
+
+If your SSH command needs extra options, use `SSH_OPTS`:
 
 ```bash
-K3S_NODES="k3s-master k3s-worker1" ./scripts/load-images-to-k3s-multipass.sh
-K3S_NODES="k3s-master k3s-worker1" ./scripts/check-k3s-images.sh
+SSH_OPTS="-i ~/.ssh/k8s-lab -o StrictHostKeyChecking=accept-new" \
+K3S_NODES="student@192.168.56.10 student@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
+```
+
+For instructor Multipass environments, use the Multipass helper scripts instead:
+
+```bash
+./scripts/load-images-to-k3s-multipass.sh
+./scripts/check-k3s-images.sh
 ```
 
 If `save-k3s-images.sh` reports missing `postgres:15` or `busybox:1.36`, ask the instructor for a preloaded image tar or pull those images before class. Only building API/frontend is not enough because PostgreSQL and busybox are still runtime images.
