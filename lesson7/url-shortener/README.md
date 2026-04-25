@@ -68,7 +68,34 @@ The image names stay the same as the imported tar. `postgres:15` still means the
 
 ### Default: instructor-provided image tar
 
-Download `url-shortener-k3s-images.tar` from the instructor's cloud storage link, then verify the checksum:
+Download `url-shortener-k3s-images.tar` from the instructor's cloud storage link:
+
+```text
+https://drive.google.com/file/d/1LAvKkpENmTtQjvxxrivgoHDbuJWzcJH-/view?usp=drive_link
+```
+
+Put the tar on the Linux VM where you will run the lab commands, usually the control plane VM.
+
+Recommended classroom path: download with the Windows browser, then copy the tar into the control plane VM.
+
+```powershell
+ssh user@192.168.56.10 "mkdir -p ~/Downloads"
+scp "$env:USERPROFILE\Downloads\url-shortener-k3s-images.tar" user@192.168.56.10:~/Downloads/
+```
+
+Replace `user@192.168.56.10` with your own Linux VM SSH target. If your SSH username is `ubuntu`, use `ubuntu@192.168.56.10`.
+
+Optional Linux-only path: if the Linux VM has internet access, download directly with `gdown`.
+
+```bash
+mkdir -p ~/Downloads
+python3 -m pip install --user gdown
+python3 -m gdown --id 1LAvKkpENmTtQjvxxrivgoHDbuJWzcJH- -O ~/Downloads/url-shortener-k3s-images.tar
+```
+
+If the Google Drive file requires sign-in or permission approval, use the Windows browser path above, or ask the instructor to enable link access before class.
+
+After the tar is on the Linux VM, verify the checksum:
 
 ```bash
 sha256sum ~/Downloads/url-shortener-k3s-images.tar
