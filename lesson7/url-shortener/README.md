@@ -37,29 +37,141 @@ Ingress short.local
 |---|---|
 | `api/` | Express API source code, migration, and Dockerfile |
 | `frontend/` | Static frontend source code and Dockerfile |
-| `k8s/` | Step-by-step Kubernetes YAML for students |
+| `k8s/` | Public-image Kubernetes YAML fallback |
+| `k8s-local/` | Local-image YAML for PostgreSQL, API, frontend, and migration Job |
 | `helm/url-shortener/` | Helm chart for one-command install and upgrade |
+| `scripts/` | Student scripts for build/save/load/check local images |
 | `local-smoke-test.sh` | Instructor-only Docker smoke test for local verification |
 
-## Image Prerequisite
+## Image Strategy
 
-The Kubernetes YAML and Helm chart use these public image tags:
+The default class workflow avoids Docker Hub rate limits. The instructor provides a prebuilt image tar from cloud storage, and users import that tar into every k3s node.
+
+```text
+cloud download -> k3s ctr images import -> kubectl apply / helm install
+```
+
+Important: Docker and k3s do not necessarily use the same image store. Downloading the tar is not enough; k3s runs Pods from the containerd image store inside each Linux node. Import the tar into both the control plane and worker nodes before applying YAML.
+
+Rule of thumb: if a Pod is scheduled to a node, that node must already have the image. With `imagePullPolicy: Never`, k3s will not pull from Docker Hub as a backup.
+
+For the local-image workflow, use the YAML files in `k8s-local/` for every workload that runs an image from the tar:
+
+| YAML | Image behavior |
+|---|---|
+| `k8s-local/03-postgres.yaml` | Uses `postgres:15` with `imagePullPolicy: Never` |
+| `k8s-local/04-migrate-job.yaml` | Uses `busybox:1.36` and `url-shortener-api:lab` with `imagePullPolicy: Never` |
+| `k8s-local/05-api.yaml` | Uses `url-shortener-api:lab` with `imagePullPolicy: Never` |
+| `k8s-local/06-frontend.yaml` | Uses `url-shortener-frontend:lab` with `imagePullPolicy: Never` |
+
+The image names stay the same as the imported tar. `postgres:15` still means the local `postgres:15` image inside each k3s node's containerd image store. The important difference is `imagePullPolicy: Never`: if the image was not imported to that node, the Pod fails immediately instead of trying Docker Hub.
+
+### Default: instructor-provided image tar
+
+Download `url-shortener-k3s-images.tar` from the instructor's cloud storage link:
+
+```text
+https://drive.google.com/file/d/1LAvKkpENmTtQjvxxrivgoHDbuJWzcJH-/view?usp=drive_link
+```
+
+Put the tar on the Linux VM where you will run the lab commands, usually the control plane VM.
+
+Recommended classroom path: download with the Windows browser, then copy the tar into the control plane VM.
+
+```powershell
+ssh user@192.168.56.10 "mkdir -p ~/Downloads"
+scp "$env:USERPROFILE\Downloads\url-shortener-k3s-images.tar" user@192.168.56.10:~/Downloads/
+```
+
+Replace `user@192.168.56.10` with your own Linux VM SSH target. If your SSH username is `ubuntu`, use `ubuntu@192.168.56.10`.
+
+Optional Linux-only path: if the Linux VM has internet access, download directly with `gdown`.
+
+```bash
+mkdir -p ~/Downloads
+python3 -m pip install --user gdown
+python3 -m gdown --id 1LAvKkpENmTtQjvxxrivgoHDbuJWzcJH- -O ~/Downloads/url-shortener-k3s-images.tar
+```
+
+If the Google Drive file requires sign-in or permission approval, use the Windows browser path above, or ask the instructor to enable link access before class.
+
+After the tar is on the Linux VM, verify the checksum:
+
+```bash
+sha256sum ~/Downloads/url-shortener-k3s-images.tar
+```
+
+Expected SHA256:
+
+```text
+bae34023b8fd055f13235ce239976c95d5f97156bde6bd0452c8de7a76f7fc44
+```
+
+Import the tar into every k3s node:
+
+```bash
+IMAGE_TAR=~/Downloads/url-shortener-k3s-images.tar \
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" ./scripts/check-k3s-images-ssh.sh
+```
+
+If you place the tar at the default path `./dist/url-shortener-k3s-images.tar`, `IMAGE_TAR` can be omitted:
+
+```bash
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
+```
+
+The tar file contains:
+
+| Image | Used by |
+|---|---|
+| `url-shortener-api:lab` | API Deployment and migration Job |
+| `url-shortener-frontend:lab` | Frontend Deployment |
+| `postgres:15` | PostgreSQL StatefulSet |
+| `busybox:1.36` | migration Job init container |
+
+Set `K3S_NODES` to the SSH targets for every k3s node. For a Windows + VMware classroom, this usually means the Linux control plane VM and the Linux worker VM. The machine running the script must be able to SSH into each VM, and the SSH user must be able to run `sudo -n k3s ctr images list -q` without an interactive password prompt.
+
+If your SSH command needs extra options, use `SSH_OPTS`:
+
+```bash
+SSH_OPTS="-i ~/.ssh/k8s-lab -o StrictHostKeyChecking=accept-new" \
+K3S_NODES="user@192.168.56.10 user@192.168.56.11" \
+  ./scripts/load-images-to-k3s-ssh.sh
+```
+
+For instructor Multipass environments, use the Multipass helper scripts instead:
+
+```bash
+./scripts/load-images-to-k3s-multipass.sh
+./scripts/check-k3s-images.sh
+```
+
+### Optional: rebuild the image tar
+
+Use this path only when the instructor needs to regenerate the tar before class:
+
+```bash
+./scripts/build-local-images.sh
+docker pull postgres:15
+docker pull busybox:1.36
+./scripts/save-k3s-images.sh
+```
+
+Only building API/frontend is not enough because PostgreSQL and busybox are still runtime images.
+
+### Fallback: public images
+
+The public-image YAML and chart values can still use these tags:
 
 ```text
 yanchen184/url-shortener-api:v1
 yanchen184/url-shortener-frontend:v1
 ```
 
-Before class, verify that both images exist:
-
-```bash
-docker manifest inspect yanchen184/url-shortener-api:v1 >/dev/null
-docker manifest inspect yanchen184/url-shortener-frontend:v1 >/dev/null
-```
-
-If either image is missing, publish the course app images first. In the course site repo, the GitHub Actions workflow `.github/workflows/build-apps.yml` builds and pushes these images when the `apps/**` changes are pushed to `master`, assuming `DOCKERHUB_TOKEN` is configured.
-
-The local smoke test does not require these public tags because it builds temporary local images from `api/` and `frontend/`.
+Use this only as a fallback. If the whole class pulls public images at the same time, Docker Hub may rate-limit requests and Pods can enter `ImagePullBackOff`.
 
 ## Two-Hour Teaching Flow
 
@@ -82,10 +194,10 @@ Run from this directory:
 kubectl apply -f k8s/00-namespace.yaml
 kubectl apply -f k8s/01-secret.yaml
 kubectl apply -f k8s/02-configmap.yaml
-kubectl apply -f k8s/03-postgres.yaml
-kubectl apply -f k8s/04-migrate-job.yaml
-kubectl apply -f k8s/05-api.yaml
-kubectl apply -f k8s/06-frontend.yaml
+kubectl apply -f k8s-local/03-postgres.yaml
+kubectl apply -f k8s-local/04-migrate-job.yaml
+kubectl apply -f k8s-local/05-api.yaml
+kubectl apply -f k8s-local/06-frontend.yaml
 kubectl apply -f k8s/07-hpa.yaml
 kubectl apply -f k8s/08-ingress.yaml
 ```
@@ -144,12 +256,13 @@ Expected result: the StatefulSet recreates `postgres-0`, the same PVC is mounted
 
 ## Helm Install
 
-After students complete the manual flow, show the one-command install:
+After users complete the manual flow, show the one-command install:
 
 ```bash
 helm install url-shortener ./helm/url-shortener \
   -n url-shortener \
-  --create-namespace
+  --create-namespace \
+  -f ./helm/url-shortener/values-local.yaml
 ```
 
 Upgrade with values:
@@ -173,6 +286,7 @@ helm rollback url-shortener 1 -n url-shortener
 
 | Value | Meaning |
 |---|---|
+| `image.registry` | Empty for local images, public registry namespace for remote images |
 | `image.tag` | Product version to deploy |
 | `replicaCount.api` | API Pod count before HPA changes it |
 | `replicaCount.frontend` | Frontend Pod count |
